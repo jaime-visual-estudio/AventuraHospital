@@ -1,0 +1,591 @@
+import java.util.Scanner;
+
+public class JuegoHospital {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String otra;
+
+        System.out.println("NOCHE EN EL HOSPITAL");
+        System.out.println("Escapa antes del amanecer. Tienes 3 vidas y tus decisiones cuentan.");
+
+        do {
+            jugar(sc);
+            System.out.print("\n¿Quieres jugar otra vez? (s/n): ");
+            otra = sc.nextLine().trim().toLowerCase();
+        } while (otra.equals("s"));
+
+        System.out.println("¡Gracias por jugar!");
+        sc.close();
+    }
+
+    static int vidas;
+
+    static boolean[] mochila = new boolean[4];
+    static String[] nombreObjeto = { "", "Linterna", "Tarjeta de acceso", "Botiquín" };
+
+    static int LINTERNA = 1;
+    static int TARJETA = 2;
+    static int BOTIQUIN = 3;
+
+    public static void mostrarEstado() {
+        String objetos = "";
+        for (int k = 1; k <= 3; k++) {
+            if (mochila[k]) {
+                objetos = objetos + nombreObjeto[k] + ", ";
+            }
+        }
+        if (objetos.length() == 0) {
+            objetos = "vacía";
+        } else {
+
+            objetos = objetos.substring(0, objetos.length() - 2);
+        }
+        System.out.println("\n--- Vidas: " + vidas + " | Mochila: " + objetos + " ---");
+    }
+
+    public static int pedir(Scanner sc, String titulo, String preg, String op1, String op2, String op3) {
+        int eleccion = 0;
+
+        while (eleccion == 0) {
+            mostrarEstado();
+            System.out.println("\n=== " + titulo + " ===");
+            System.out.println(preg);
+            System.out.println("1. " + op1);
+            System.out.println("2. " + op2);
+            System.out.println("3. " + op3);
+
+            boolean puedeCurar = mochila[BOTIQUIN] && vidas < 3;
+            if (puedeCurar) {
+                System.out.println("4. Usar el botiquín (recuperas 1 vida)");
+            }
+
+            System.out.print("Elige una opción: ");
+            String linea = sc.nextLine().trim();
+
+            if (linea.equals("1")) {
+                eleccion = 1;
+            } else if (linea.equals("2")) {
+                eleccion = 2;
+            } else if (linea.equals("3")) {
+                eleccion = 3;
+            } else if (linea.equals("4") && puedeCurar) {
+                mochila[BOTIQUIN] = false;
+                vidas = vidas + 1;
+                System.out.println("\nUsas el botiquín y recuperas una vida.");
+            } else {
+                System.out.println("\nOpción no válida. Escribe 1, 2 o 3.");
+            }
+        }
+        return eleccion;
+    }
+
+    public static boolean nada(String mensaje) {
+        System.out.println("\n" + mensaje);
+        return true;
+    }
+
+    public static boolean conseguir(int objeto, String mensaje) {
+        System.out.println("\n" + mensaje);
+        mochila[objeto] = true;
+        System.out.println("Has conseguido: " + nombreObjeto[objeto]);
+        return true;
+    }
+
+    public static boolean perderVida(String mensaje) {
+        System.out.println("\n" + mensaje);
+        vidas = vidas - 1;
+        System.out.println("Pierdes una vida.");
+        return vidas > 0;
+    }
+
+    public static boolean peligro(int objeto, String mensajeMuerte, String mensajeSalvado) {
+        if (mochila[objeto]) {
+            mochila[objeto] = false;
+            System.out.println("\n" + mensajeSalvado);
+            return true;
+        } else {
+            System.out.println("\n" + mensajeMuerte);
+            return false;
+        }
+    }
+
+    public static boolean escena1(Scanner sc) {
+        int e = pedir(sc, "ESCENA 1: Habitación 204",
+                "Te despiertas en la habitación 204 de un hospital. No hay luz y tienes el suero en el brazo. ¿Qué haces?",
+                "Salir al pasillo sin hacer ruido",
+                "Coger la linterna de la mesilla",
+                "Arrancarte el suero de golpe");
+
+        switch (e) {
+            case 1:
+                return nada("Abres la puerta despacio. El pasillo está en silencio.");
+            case 2:
+                return conseguir(LINTERNA, "Encuentras una linterna que todavía funciona.");
+            default:
+                return perderVida("Te arrancas la aguja y te duele mucho.");
+        }
+    }
+
+    public static boolean escena2(Scanner sc) {
+        int e = pedir(sc, "ESCENA 2: Pasillo oscuro",
+                "Avanzas por un pasillo a oscuras y oyes pasos lejanos. ¿Cómo sigues?",
+                "Caminar pegado a la pared",
+                "Seguir los carteles de salida",
+                "Bajar por la rampa en una silla de ruedas");
+
+        switch (e) {
+            case 1:
+                return nada("Avanzas despacio y sin hacer ruido.");
+            case 2:
+                return nada("Los carteles brillan un poco y te guían.");
+            default:
+                return perderVida("La silla coge velocidad y chocas contra una pared.");
+        }
+    }
+
+    public static boolean escena3(Scanner sc) {
+        int e = pedir(sc, "ESCENA 3: Enfermería",
+                "Llegas a una enfermería: un mostrador lleno de papeles, un teléfono y una bata colgada.",
+                "Revisar los historiales",
+                "Registrar los bolsillos de la bata",
+                "Intentar llamar por teléfono");
+
+        switch (e) {
+            case 1:
+                return nada("Hay muchos expedientes, pero ninguno te dice cómo salir.");
+            case 2:
+                return conseguir(TARJETA, "En un bolsillo hay una tarjeta de acceso del personal.");
+            default:
+                return nada("No hay línea.");
+        }
+    }
+
+    public static boolean escena4(Scanner sc) {
+        int e = pedir(sc, "ESCENA 4: Escaleras de emergencia",
+                "Llegas a unas escaleras de emergencia completamente a oscuras. Hay que bajar.",
+                "Bajar corriendo a ciegas",
+                "Bajar pegado a la pared, peldaño a peldaño",
+                "Bajar sentado, escalón a escalón");
+
+        switch (e) {
+            case 1:
+                return peligro(LINTERNA,
+                        "Tropiezas en la oscuridad y caes por el hueco de la escalera.",
+                        "Tu linterna ilumina un escalón roto y lo esquivas. Se agotan las pilas: gastas la linterna.");
+            case 2:
+                return nada("Tardas un rato, pero llegas abajo sano y salvo.");
+            default:
+                return nada("Es lento, pero llegas abajo sin problemas.");
+        }
+    }
+
+    public static boolean escena5(Scanner sc) {
+        int e = pedir(sc, "ESCENA 5: Recepción",
+                "Llegas a una recepción: un mostrador desierto, monitores apagados y un walkie-talkie.",
+                "Mirar los monitores de las cámaras",
+                "Probar el walkie-talkie",
+                "Buscar un plano del hospital");
+
+        switch (e) {
+            case 1:
+                return nada("Las pantallas están apagadas, pero ver tu reflejo te tranquiliza.");
+            case 2:
+                return nada("Solo se oyen interferencias.");
+            default:
+                return nada("Encuentras un plano roto, pero te ayuda a orientarte.");
+        }
+    }
+
+    public static boolean escena6(Scanner sc) {
+        int e = pedir(sc, "ESCENA 6: Quirófano",
+                "Entras en un quirófano: una camilla, instrumental y una lámpara colgando del techo.",
+                "Coger un bisturí por si acaso",
+                "Encender la lámpara del techo",
+                "Esconderte bajo la camilla un rato");
+
+        switch (e) {
+            case 1:
+                return perderVida("Te cortas la mano al guardarlo.");
+            case 2:
+                return nada("La sala se ilumina un momento y ves mejor.");
+            default:
+                return nada("Esperas un rato. No pasa nada y sigues.");
+        }
+    }
+
+    public static boolean escena7(Scanner sc) {
+        int e = pedir(sc, "ESCENA 7: Laboratorio",
+                "Llegas a un laboratorio con tubos de ensayo y una puerta metálica con un lector de tarjetas.",
+                "Forzar la puerta metálica",
+                "Mirar por el microscopio",
+                "Leer la pizarra con anotaciones");
+
+        switch (e) {
+            case 1:
+                return peligro(TARJETA,
+                        "La puerta está electrificada y recibes una descarga mortal.",
+                        "Pasas la tarjeta por el lector y la puerta se abre. La tarjeta se funde: la gastas.");
+            case 2:
+                return nada("Ves algo extraño en la muestra. Prefieres no pensar en ello.");
+            default:
+                return nada("Hablan de un 'paciente cero'.");
+        }
+    }
+
+    public static boolean escena8(Scanner sc) {
+        int e = pedir(sc, "ESCENA 8: Farmacia",
+                "Entras en la farmacia: estanterías revueltas y una vitrina cerrada con llave.",
+                "Revisar las estanterías",
+                "Intentar abrir la vitrina",
+                "Coger el botiquín del mostrador");
+
+        switch (e) {
+            case 1:
+                return nada("Todo está desordenado y no hay nada útil.");
+            case 2:
+                return nada("No cede.");
+            default:
+                return conseguir(BOTIQUIN, "Coges un botiquín: sirve para curarte o como antídoto.");
+        }
+    }
+
+    public static boolean escena9(Scanner sc) {
+        int e = pedir(sc, "ESCENA 9: Archivo",
+                "Llegas a un archivo con cajones llenos de expedientes y una cámara frigorífica al fondo.",
+                "Buscar tu expediente",
+                "Abrir un cajón de la cámara frigorífica",
+                "Salir sin tocar nada");
+
+        switch (e) {
+            case 1:
+                return nada("Lo encuentras: pone 'paciente en observación'.");
+            case 2:
+                return perderVida("Algo se mueve dentro. Retrocedes y te golpeas la cabeza.");
+            default:
+                return nada("Sales del archivo aliviado.");
+        }
+    }
+
+    public static boolean escena10(Scanner sc) {
+        int e = pedir(sc, "ESCENA 10: Cafetería",
+                "Llegas a una cafetería vacía. Sobre una mesa hay una botella sin etiqueta.",
+                "Beber de la botella sin etiqueta",
+                "Comer algo de la máquina expendedora",
+                "Buscar agua en la cocina");
+
+        switch (e) {
+            case 1:
+                return peligro(BOTIQUIN,
+                        "El líquido era tóxico y te desplomas.",
+                        "Usas el botiquín como antídoto y te recuperas. Lo has gastado.");
+            case 2:
+                return nada("Recuperas fuerzas.");
+            default:
+                return nada("Bebes agua del grifo y sigues.");
+        }
+    }
+
+    public static boolean escena11(Scanner sc) {
+        int e = pedir(sc, "ESCENA 11: Sala de máquinas",
+                "Llegas a una sala de máquinas con un cuadro eléctrico de cables sueltos y un generador parado.",
+                "Tocar el cuadro eléctrico",
+                "Activar el generador",
+                "Esperar a que vuelva la luz");
+
+        switch (e) {
+            case 1:
+                return perderVida("Recibes una descarga que te quema la mano.");
+            case 2:
+                return nada("El generador arranca y vuelve la luz.");
+            default:
+                return nada("Tras unos minutos, la luz vuelve sola.");
+        }
+    }
+
+    public static void mostrarFinal(String titulo, String descripcion) {
+        System.out.println("\n==============================");
+        System.out.println(titulo);
+        System.out.println("==============================");
+        System.out.println(descripcion);
+    }
+
+    public static void escena12(Scanner sc) {
+        boolean terminado = false;
+
+        while (!terminado) {
+            int e = pedir(sc, "ESCENA 12 : Hall principal",
+                    "Subes al hall. Ves la puerta principal, la escalera a la azotea y un despacho con el cartel DIRECTOR.",
+                    "Salir por la puerta principal",
+                    "Subir a la azotea",
+                    "Entrar en el despacho del director");
+
+            switch (e) {
+                case 1:
+                    if (vidas >= 2) {
+                        mostrarFinal("FINAL 1: LIBERTAD",
+                                "Empujas la puerta principal y sales a la calle con la luz del amanecer. Estás a salvo.");
+                    } else {
+                        mostrarFinal("FINAL 2: ESCAPAS CON SECUELAS",
+                                "Sales por la puerta principal casi sin fuerzas. Sobrevives, pero tardarás mucho en recuperarte.");
+                    }
+                    terminado = true;
+                    break;
+
+                case 2:
+                    mostrarFinal("FINAL 2: ESCAPAS CON SECUELAS",
+                            "En la azotea te ve un helicóptero de rescate. Sobrevives, pero tardarás mucho en recuperarte.");
+                    terminado = true;
+                    break;
+
+                default:
+                    if (mochila[TARJETA]) {
+                        mostrarFinal("FINAL 3: LA VERDAD",
+                                "Abres el despacho con la tarjeta. Dentro están las pruebas de lo que ocultaba el hospital y las haces públicas.");
+                        terminado = true;
+                    } else {
+                        System.out.println("\nEl despacho está cerrado con un lector de tarjetas. No puedes entrar. Elige otra opción.");
+                    }
+                    break;
+            }
+        }
+    }
+
+    public static int pedirNumero(Scanner sc, String texto, int max) {
+        int numero = 0;
+
+        while (numero == 0) {
+            System.out.print(texto);
+            String linea = sc.nextLine().trim();
+
+            for (int k = 1; k <= max; k++) {
+                if (linea.equals("" + k)) {
+                    numero = k;
+                }
+            }
+
+            if (numero == 0) {
+                System.out.println("Número no válido. Escribe un número del 1 al " + max + ".");
+            }
+        }
+        return numero;
+    }
+
+    public static void mostrarEnemigo(String titulo) {
+        System.out.println("\n##############################");
+        System.out.println(titulo);
+        System.out.println("##############################");
+    }
+
+    public static boolean paresONones(Scanner sc) {
+        mostrarEnemigo("ENEMIGO: EL ENFERMERO SINIESTRO");
+        System.out.println("Un enfermero te bloquea el paso con una sonrisa extraña.");
+        System.out.println("'Juguemos a pares o nones. Gana quien consiga 2 puntos. Si pierdes, no sales de aquí.'");
+
+        int eleccion = pedirNumero(sc, "\n¿Qué eliges? 1 = Pares, 2 = Nones: ", 2);
+        boolean pares = (eleccion == 1);
+        int ganadas = 0;
+        int perdidas = 0;
+
+        while (ganadas < 2 && perdidas < 2) {
+            int tuNumero = pedirNumero(sc, "\nSaca los dedos de una mano (1 a 5): ", 5);
+            int suNumero = (int) (Math.random() * 5) + 1;
+            int suma = tuNumero + suNumero;
+            System.out.println("Tú sacas " + tuNumero + " y el enfermero saca " + suNumero + ". Suman " + suma + ".");
+
+            boolean salePar = (suma % 2 == 0);
+            if (salePar == pares) {
+                ganadas = ganadas + 1;
+                System.out.println("Punto para ti. (" + ganadas + " - " + perdidas + ")");
+            } else {
+                perdidas = perdidas + 1;
+                System.out.println("Punto para el enfermero. (" + ganadas + " - " + perdidas + ")");
+            }
+        }
+
+        if (ganadas == 2) {
+            System.out.println("\nEl enfermero gruñe y se aparta. Has ganado y puedes seguir.");
+            return true;
+        }
+        System.out.println("\nEl enfermero sonríe. Has perdido el juego y no sales de aquí.");
+        return false;
+    }
+
+    public static boolean ruletaRusa(Scanner sc) {
+        mostrarEnemigo("ENEMIGO: EL FARMACÉUTICO");
+        System.out.println("El farmacéutico te espera con un revólver de seis cámaras y una sola bala.");
+        System.out.println("'Jugaremos a la ruleta rusa. Disparamos por turnos hasta que suene la bala.'");
+
+        int quien = pedirNumero(sc, "\n¿Quién dispara primero? 1 = Tú, 2 = El farmacéutico: ", 2);
+        boolean turnoTuyo = (quien == 1);
+        int bala = (int) (Math.random() * 6) + 1;
+
+        for (int disparo = 1; disparo <= 6; disparo++) {
+            if (turnoTuyo) {
+                System.out.print("\nTu turno. Pulsa Enter para apretar el gatillo...");
+            } else {
+                System.out.print("\nTurno del farmacéutico. Pulsa Enter para continuar...");
+            }
+            sc.nextLine();
+
+            if (disparo == bala) {
+                System.out.println("¡BANG!");
+                if (turnoTuyo) {
+                    System.out.println("La bala era para ti. Has perdido.");
+                    return false;
+                }
+                System.out.println("La bala era para el farmacéutico. Has ganado.");
+                return true;
+            }
+
+            System.out.println("Clic... la cámara estaba vacía.");
+            turnoTuyo = !turnoTuyo;
+        }
+        return true;
+    }
+
+    public static void dibujarAhorcado(int fallos) {
+        System.out.println(" +---+");
+        System.out.println(" |   |");
+
+        if (fallos >= 1) {
+            System.out.println(" |   O");
+        } else {
+            System.out.println(" |");
+        }
+
+        if (fallos >= 4) {
+            System.out.println(" |  -|-");
+        } else if (fallos == 3) {
+            System.out.println(" |  -|");
+        } else if (fallos == 2) {
+            System.out.println(" |   |");
+        } else {
+            System.out.println(" |");
+        }
+
+        if (fallos >= 6) {
+            System.out.println(" |  | |");
+        } else if (fallos == 5) {
+            System.out.println(" |  |");
+        } else {
+            System.out.println(" |");
+        }
+
+        System.out.println("=====");
+    }
+
+    public static boolean ahorcado(Scanner sc) {
+        mostrarEnemigo("JEFE FINAL: EL DOCTOR");
+        System.out.println("En el hall te espera el Doctor, el dueño del hospital. Bloquea la salida.");
+        System.out.println("'Adivina mi palabra secreta antes de cometer 6 errores y te dejaré marchar.'");
+
+        String[] palabras = { "ANESTESIA", "QUIROFANO", "AMBULANCIA", "ENFERMERO", "PACIENTE" };
+        String secreta = palabras[(int) (Math.random() * palabras.length)];
+
+        String progreso = "";
+        for (int k = 0; k < secreta.length(); k++) {
+            progreso = progreso + "_";
+        }
+
+        String usadas = "";
+        int fallos = 0;
+
+        while (fallos < 6 && progreso.indexOf("_") != -1) {
+            String visible = "";
+            for (int k = 0; k < progreso.length(); k++) {
+                visible = visible + progreso.charAt(k) + " ";
+            }
+
+            System.out.println();
+            dibujarAhorcado(fallos);
+            System.out.println("Palabra: " + visible);
+            System.out.println("Errores: " + fallos + " de 6 | Letras usadas: " + usadas);
+            System.out.print("Escribe una letra: ");
+            String letra = sc.nextLine().trim().toUpperCase();
+
+            if (letra.length() != 1 || letra.charAt(0) < 'A' || letra.charAt(0) > 'Z') {
+                System.out.println("Escribe solo una letra, de la A a la Z.");
+            } else if (usadas.indexOf(letra) != -1) {
+                System.out.println("Esa letra ya la has dicho.");
+            } else {
+                usadas = usadas + letra;
+
+                if (secreta.indexOf(letra) != -1) {
+                    System.out.println("¡Acierto!");
+                    String nuevo = "";
+                    for (int k = 0; k < secreta.length(); k++) {
+                        if (secreta.charAt(k) == letra.charAt(0)) {
+                            nuevo = nuevo + letra;
+                        } else {
+                            nuevo = nuevo + progreso.charAt(k);
+                        }
+                    }
+                    progreso = nuevo;
+                } else {
+                    fallos = fallos + 1;
+                    System.out.println("Esa letra no está.");
+                }
+            }
+        }
+
+        if (progreso.indexOf("_") == -1) {
+            System.out.println("\nLa palabra era " + secreta + ". El Doctor se aparta furioso: puedes marcharte.");
+            return true;
+        }
+
+        System.out.println();
+        dibujarAhorcado(fallos);
+        System.out.println("\nLa palabra era " + secreta + ". El Doctor ha ganado y no te deja salir.");
+        return false;
+    }
+
+    public static void jugar(Scanner sc) {
+
+        vidas = 3;
+        for (int k = 1; k <= 3; k++) {
+            mochila[k] = false;
+        }
+
+        boolean vivo = true;
+        int numero = 1;
+
+        while (vivo && numero <= 11) {
+            switch (numero) {
+                case 1:  vivo = escena1(sc);  break;
+                case 2:  vivo = escena2(sc);  break;
+                case 3:
+                    vivo = escena3(sc);
+                    if (vivo) {
+                        vivo = paresONones(sc);
+                    }
+                    break;
+                case 4:  vivo = escena4(sc);  break;
+                case 5:  vivo = escena5(sc);  break;
+                case 6:  vivo = escena6(sc);  break;
+                case 7:  vivo = escena7(sc);  break;
+                case 8:
+                    vivo = escena8(sc);
+                    if (vivo) {
+                        vivo = ruletaRusa(sc);
+                    }
+                    break;
+                case 9:  vivo = escena9(sc);  break;
+                case 10: vivo = escena10(sc); break;
+                case 11: vivo = escena11(sc); break;
+            }
+            numero = numero + 1;
+        }
+
+        if (vivo) {
+            vivo = ahorcado(sc);
+        }
+
+        if (vivo) {
+            escena12(sc);
+        } else {
+            System.out.println("\nHas muerto. FIN DE LA PARTIDA.");
+        }
+    }
+
+}
